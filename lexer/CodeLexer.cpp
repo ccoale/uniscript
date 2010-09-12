@@ -1,4 +1,7 @@
 #include "CodeLexer.h"
+#include <float.h>
+#include <limits.h>
+#include <stdlib.h>
 
 namespace Uniscript
 {
@@ -81,6 +84,18 @@ namespace Uniscript
 
 		// whether or not the floating point . has been found
 		bool foundDot = false;
+
+		// lb1 is a look-back 1
+		char lb1 = 0;
+
+		// temporary 64-bit integer
+		__int64 ntmp = 0;
+
+		// temporary 64-bit float
+		double ftmp = 0.0;
+
+		// whether or not the vaue is int or float
+		bool isint = false;
 
 		// loop through each character in the source
 		for (; i < length; i++)
@@ -290,7 +305,15 @@ namespace Uniscript
 				break;
 
 			case '.':
-				tokens->push_back(LexerToken(line, col, TOK_DOT, szOptFile)); // .
+				if ( (la2 >= '0' && la2 <= '9'))
+				{
+					stringStart = i;
+					goto _lexFloat;
+				}
+				else
+				{
+					tokens->push_back(LexerToken(line, col, TOK_DOT, szOptFile)); // .
+				}
 				break;
 			
 			case ',':
@@ -340,11 +363,11 @@ namespace Uniscript
 				}
 
 				// we now have our string literal
-				LexerToken strTok = LexerToken(line, col, TOK_STR, szOptFile);
-				strTok.str = new char[i - stringStart];
-				strcpy(strTok.str, stringLiteral);
-				strTok.str[i - stringStart] = 0;
-				tokens->push_back(strTok);
+				tok = LexerToken(line, col, TOK_STR, szOptFile);
+				tok.str = new char[i - stringStart];
+				strcpy(tok.str, stringLiteral);
+				tok.str[i - stringStart] = 0;
+				tokens->push_back(tok);
 
 				break;
 			case '0':
@@ -358,10 +381,137 @@ namespace Uniscript
 			case '8':
 			case '9':
 				stringStart = i; // this will be the start of our number
+				for (; i < length; i++) {
+					lb1 = (i <= 0) ? 0 : src[i - 1];
+					la1 = (i > length) ? 0 : src[i];
+					la2 = (i > (length - 1)) ? 0 : src[i + 1];
+					if (la1 == '0') {
+						if (la2 == '0') continue; // remove unnecessary leading 0's
+						break;
+					}
+					break;
+				}
+_lexFloat:
 				for (; i < length; i++)
 				{
-					
+					// basic number type checking
+					lb1 = (i <= 0) ? 0 : src[i - 1];
+					la1 = (i > length) ? 0 : src[i];
+					la2 = (i > (length - 1)) ? 0 : src[i + 1];
+					if (la1 == '0') {
+						if (la2 == '0') continue; // remove unnecessary leading 0's
+						if (la2 >= '1' && la2 <= '9') {
+							// error.. expected a 'x' or a '.'
+							errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Expected a 'x' or a '.'.", szOptFile));
+							return LEXERR_UNEXPCHARINNUMLITERAL;
+						} else {
+							stringLiteral[stringStart++] = '0';
+						}
+					} else if (la1 == 'x') {
+						if (lb1 == '0') {
+							// it might be hex.
+							if (!foundX && !foundDot) {
+								// it is hex
+								foundX = true;
+							} else {
+								// error.. unexpected 'x' in number literal.
+								errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected 'x' in number literal.", szOptFile));
+								return LEXERR_UNEXPCHARINNUMLITERAL;
+							}
+						} else {
+							errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected 'x' in number literal.", szOptFile));
+							return LEXERR_UNEXPCHARINNUMLITERAL;
+						}
+					} else if (la1 == '.') {
+						if (!foundDot && !foundX) {
+							// it's a floating-point number
+							foundDot = true;
+							stringLiteral[stringStart++] = '.';
+						} else {
+							// error.. unexpected '.' in number literal.
+							errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected ',' in number literal.", szOptFile));
+							return LEXERR_UNEXPCHARINNUMLITERAL;
+						}
+					} else {
+						// check for basic numbers
+						if (foundX) {
+							// the next number can either be 0-9 or a-f or A-F
+							if ((la1 >= '0' && la1 <= '9') || (la1 >= 'a' && la1 <= 'f') || (la1 >= 'A' && la1 <= 'F')) {
+								// we're good to go.. copy the character to the number string
+								stringLiteral[stringStart++] = la1;
+							} else {
+								// error.. unexpected character in number literal.
+								//errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected character in number literal.", szOptFile));
+								//return LEXERR_UNEXPCHARINNUMLITERAL;
+								break;
+							}
+						} else {
+							// it will be a normal number
+							if ( (la1 >= '0' && la1 <= '9') ) {
+								// we're good to go
+								stringLiteral[stringStart++] =la1;
+							} else {
+								// error.. unexpected character in number literal
+								//errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected character in number literal.", szOptFile));
+								//return LEXERR_UNEXPCHARINNUMLITERAL;
+								break;
+							}
+						}
+					}
 				}
+
+				i -= 1;
+				stringLiteral[stringStart] = 0;
+				
+				if (foundDot) {
+					ftmp = strtod(stringLiteral, NULL);
+					isint = false;
+				} else if (foundX) {
+					sscanf(stringLiteral, "%I64X", &ntmp);
+					isint = true;
+				} else {
+					sscanf(stringLiteral, "%I64", &ntmp);
+					isint = true;
+				}
+
+				if (isint)
+				{
+					// we need to figure out why kind of int it is
+					if (ntmp <= UCHAR_MAX) {
+						// it's a CHAR
+						tok = LexerToken(line, col, TOK_BYTE, szOptFile);
+						tok.n8 = (unsigned char)ntmp;
+					} else if ((ntmp > UCHAR_MAX) && (ntmp <= USHRT_MAX)) {
+						// it's a SHORT
+						tok = LexerToken(line, col, TOK_SHORT, szOptFile);
+						tok.n16 = (unsigned short)ntmp;
+					} else if ((ntmp > USHRT_MAX) && (ntmp <= ULONG_MAX)) {
+						// it's an INT
+						tok = LexerToken(line, col, TOK_INT, szOptFile);
+						tok.n32 = (unsigned int)ntmp;
+					} else if ((ntmp > ULONG_MAX)) {
+						// it's an INT64
+						tok = LexerToken(line, col, TOK_LONG, szOptFile);
+						tok.n64 = ntmp;
+					}
+				}
+				else
+				{
+					// we need to figure out if it is a float or a double
+					if (ftmp <= FLT_MAX) {
+						// it's a FLOAT
+						tok = LexerToken(line, col, TOK_FLOAT, szOptFile);
+						tok.f32 = (float)ftmp;
+					} else {
+						// it's a DOUBLE
+						tok = LexerToken(line, col, TOK_DOUBLE, szOptFile);
+						tok.f64 = ftmp;
+					}
+				}
+
+				tokens->push_back(tok);
+
+
 				break;
 			};
 		}

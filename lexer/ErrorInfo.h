@@ -45,6 +45,9 @@ namespace Uniscript
 
 	// The string literal has no closing quote.
 	#define LEXERR_STRLITNOEND				0x03
+
+	// Unexpected character in number literal
+	#define LEXERR_UNEXPCHARINNUMLITERAL	0x04
 }
 
 #endif /* ERRORINFO_H */

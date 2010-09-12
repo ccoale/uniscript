@@ -64,6 +64,18 @@ namespace Uniscript
 		// whether or not we are in a comment
 		bool bInComment = false;
 
+		// temporary token variable
+		LexerToken tok;
+
+		// temporary buffer to store string literal (without quotes)
+		char stringLiteral[4096]; // 4,096 is PLENTY for now.
+
+		// whether or not we found a closing quote
+		bool metQuote = false;
+
+		// the start of the string literal
+		unsigned int stringStart = 0;
+
 		// loop through each character in the source
 		for (; i < length; i++)
 		{
@@ -283,11 +295,42 @@ namespace Uniscript
 					return LEXERR_UNEXPTOKINCHARLITERAL;
 				}
 
-				LexerToken tok = LexerToken(line, col, TOK_CHAR, szOptFile);
+				tok = LexerToken(line, col, TOK_CHAR, szOptFile);
 				tok.n8 = la2;
 				tokens->push_back(tok);
 				i++;
 				i++;
+
+				break;
+
+			case '"':
+				// we must loop through all characters, excluding \r, \n, and \r\n, until we reach the
+				// closing quote.
+				metQuote = false;
+				stringStart = ++i;
+				for (; i < length; i++)
+				{
+					if (src[i] == '"') {
+						metQuote = true;
+						break;
+					}
+
+					stringLiteral[i - stringStart] = src[i];
+				}
+				stringLiteral[i - stringStart] = 0; // end the string
+
+				// our string literal doesn't end!
+				if (! metQuote) {
+					errors->push_back(LexerErrorInfo(line, col, LEXERR_STRLITNOEND, "The string literal has no closing quote.", szOptFile));
+					return LEXERR_STRLITNOEND;
+				}
+
+				// we now have our string literal
+				LexerToken strTok = LexerToken(line, col, TOK_STR, szOptFile);
+				strTok.str = new char[i - stringStart];
+				strcpy(strTok.str, stringLiteral);
+				strTok.str[i - stringStart] = 0;
+				tokens->push_back(strTok);
 
 				break;
 			};

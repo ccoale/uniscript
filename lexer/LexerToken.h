@@ -291,6 +291,16 @@ namespace Uniscript
 			col = _col;
 			type = _type;
 			sourcePath = _path;
+			n64 = 0;
+		}
+
+		LexerToken()
+		{
+			line = 0;
+			col = 0;
+			type = 0;
+			sourcePath = "";
+			n64 = 0;
 		}
 
 		// The line number this token

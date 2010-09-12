@@ -42,6 +42,9 @@ namespace Uniscript
 
 	// Undefined character in character literal (e.g. 'a', 'b'. but.. ''' fails).
 	#define LEXERR_UNEXPTOKINCHARLITERAL	0x02
+
+	// The string literal has no closing quote.
+	#define LEXERR_STRLITNOEND				0x03
 }
 
 #endif /* ERRORINFO_H */

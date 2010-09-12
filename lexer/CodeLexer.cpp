@@ -76,6 +76,12 @@ namespace Uniscript
 		// the start of the string literal
 		unsigned int stringStart = 0;
 
+		// whether or not the hexadecimal 0x has been found
+		bool foundX = false;
+
+		// whether or not the floating point . has been found
+		bool foundDot = false;
+
 		// loop through each character in the source
 		for (; i < length; i++)
 		{
@@ -283,6 +289,14 @@ namespace Uniscript
 				tokens->push_back(LexerToken(line, col, TOK_END, szOptFile)); // ;
 				break;
 
+			case '.':
+				tokens->push_back(LexerToken(line, col, TOK_DOT, szOptFile)); // .
+				break;
+			
+			case ',':
+				tokens->push_back(LexerToken(line, col, TOK_COMMA, szOptFile)); // ,
+				break;
+
 				// a single character token
 			case '\'':
 				// la2 MUST be a single ASCII character
@@ -332,6 +346,22 @@ namespace Uniscript
 				strTok.str[i - stringStart] = 0;
 				tokens->push_back(strTok);
 
+				break;
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+				stringStart = i; // this will be the start of our number
+				for (; i < length; i++)
+				{
+					
+				}
 				break;
 			};
 		}

@@ -159,6 +159,12 @@ namespace Uniscript
 	// End of statement
 	#define TOK_END			TOK_CAT_SYNTAX | 0x07
 
+	// Dot (member accessor)
+	#define TOK_DOT			TOK_CAT_SYNTAX | 0x11
+
+	// Comma (separator)
+	#define TOK_COMMA		TOK_CAT_SYNTAX | 0x12
+
 
 	// Character literal
 	#define TOK_CHAR		TOK_CAT_SYNTAX | 0x08

@@ -1,0 +1,101 @@
+The Uniscript lexer is used to break a text-based Uniscript source into
+its component parts. Each component part is represented by a "token".
+
+A token is the smallest peice of information that can be obtained from
+a text-based Uniscript source. Below is a list of all tokens contained
+in a Uniscript source. The list is separated into various sections: boolean
+expressions, bitwise expressions, mathematical expressions, syntactical tokens,
+reserved words, and finally identifiers.
+
+----------------------------------------------------------------------
+TOKEN NAME				| DESCRIPTION				| EXAMPLE
+----------------------------------------------------------------------	BOOLEAN EXPRESSIONS
+LTE						| LESS THAN OR EQUAL		| <=
+LT						| LESS THAN					| <
+GTE						| GREATER THAN OR EQUAL		| >=
+GT						| GREATER THAN				| >
+EQU						| EQUAL						| ==
+NE						| NOT EQUAL					| !=
+LNOT					| LOGICAL NOT				| !
+LAND					| LOGICAL AND				| &&
+LOR						| LOGICAL OR				| ||
+----------------------------------------------------------------------	BITWISE EXPRESSIONS
+BSL						| BITSHIFT LEFT				| <<
+BSR						| BITSHIFT RIGHT			| >>
+BSLEQU					| BITSHIFT LEFT AND ASSIGN	| <<=
+BSREQU					| BITSHIFT RIGHT AND ASSIGN | >>=
+BAND					| BITWISE AND				| &
+BANDEQU					| BITWISE & AND ASSIGN		| &=
+BOR						| BITWISE OR				| |
+BOREQU					| BITWISE OR AND ASSIGN		| |=
+BXOR					| BITWISE XOR				| ^
+BXOREQU					| BITWISE XOR AND ASSIGN	| ^=
+BNOT					| BITWISE NOT				| ~
+BNE						| BITWISE NOT AND ASSIGN	| ~=
+----------------------------------------------------------------------	MATHEMATICAL EXPRESSIONS
+ADD						| ADDITION					| +
+INC						| INCREMENT BY 1			| ++
+SUB						| SUBTRACTION				| -
+DEC						| DECREMENT BY 1			| --
+MUL						| MULTIPLY					| *
+DIV						| DIVIDE					| /
+POW						| POWER						| **
+MOD						| MODULO					| %
+MODEQU					| MODULO AND ASSIGN			| %=
+POWEQU					| POWER AND ASSIGN			| **=
+ADDEQU					| ADD AND ASSIGN			| +=
+SUBEQU					| SUBTRACT AND ASSIGN		| -=
+MULEQU					| MULTIPLY AND ASSIGN		| *=
+DIVEQU					| DIVIDE AND ASSIGN			| /=
+----------------------------------------------------------------------	SYNTACTICAL TOKENS
+ASSIGN					| ASSIGNMENT				| =
+LBRACE					| LEFT BRACE				| {
+RBRACE					| RIGHT BRACE				| }
+LBRACK					| LEFT BRACKET				| [
+RBRACK					| RIGHT BRACKET				| ]
+LPAREN					| LEFT PARENTHESIS			| (
+RPAREN					| RIGHT PARENTHESIS			| )
+END						| END OF STATEMENT			| ;
+CHAR					| SINGLE UNICODE CHARACTER  | 'X'
+STR						| ARRAY OF UNICODE CHARACTER| "XXXXXXXXX"
+STRESC					| NO ESCAPE ON STRINGS		| @
+BYTE					| A BYTE LITERAL			| -128 THROUGH 127
+SHORT					| A SHORT LITERAL			| -32,768 THROUGH 32,767
+INT						| A INT LITERAL				| -2,147,483,648 THROUGH 2,147,483,647
+LONG					| A LONG LITERAL			| -9,223,372,036,854,775,808 THROUGH 9,223,372,036,854,775,807
+FLOAT					| A FLOAT LITERAL			| 3.4E +/- 38 (7 DIGITS)
+DOUBLE					| A DOUBLE LITERAL			| 1.7E +/- 308 (15 DIGITS)
+----------------------------------------------------------------------	RESERVED WORDS
+ALIAS					| ALIASES A TYPE			| alias type newType;
+BREAK					| BREAKS FROM LOOP			| break;
+CASE					| CASE LABEL				| case (constant value) { }
+CLASS					| DECLARES A CLASS			| class name { }
+CONST					| CONSTANT VARIABLE			| const type x = value;
+CONTINUE				| CONTINUES LOOP			| continue;
+DEFAULT					| DEFAULT CASE LABEL		| default { }
+DO						| DO-LOOP					| do { } while (expression);
+ELSE					| ELSE STATEMENT			| else { }
+ENUM					| ENUMERATION DECLARATION	| enum x { a, b, c, d, e, f, g }
+FALSE					| FALSE BOOLEAN VALUE		| false
+FINALLY					| CATCH-ALL CASE LABEL		| finally { }
+FOR						| FOR LOOP					| for (init; express; statement) { }
+FOREACH					| FOREACH LOOP				| foreach (x in y) { }
+IN						| FOREACH LOOP KEYWORD		| foreach (x in y) { }
+NEW						| NEW INSTANCE OF CLASS		| new type; new type(...);
+NULL					| NULL VALUE				| x = null;
+PRIVATE					| PRIVATE MEMBER			| private type x;
+PROTECTED				| PROTECTED MEMBER			| protected type x;
+PUBLIC					| PUBLIC MEMBER				| public type x;
+REF						| REFERENCE TO VARIABLE		| ref type x = ref y;
+RETURN					| RETURN FROM FUNCTION		| return value;
+STRUCT					| STRUCTURE DECLARATION		| struct type { }
+SWITCH					| SWITCH CONTROL STRUCTURE	| switch (expression) { }
+THIS					| REFERENCE TO CURRENT CLASS| this.something();
+THROW					| THROWS AN EXCEPTION		| throw exception();
+TRUE					| TRUE BOOLEAN VALUE		| true
+TYPEOF					| TYPE OF TYPE				| typeof(type);
+UNION					| UNION DATA STRUCTURE		| union type { }
+WHILE					| WHILE LOOP				| while (expression) { }
+----------------------------------------------------------------------	OTHERS ARE IDENTIFIERS (functions, variables, etc.)
+IDENT					| IDENTIFIER STRING			| myVariable
+

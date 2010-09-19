@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <map>
 #include "LexerToken.h"
 #include "../GlobalSettings.h"
 #include "ErrorInfo.h"
@@ -30,6 +31,11 @@ namespace Uniscript
 		// Set length to 0 if length is unknown.
 		static unsigned int LexSource(std::string szSource, unsigned int length, std::string szOptFile, 
 			const GlobalSettings *settings, std::vector<LexerToken> *tokens, std::vector<LexerErrorInfo> *errors);
+
+		// initializes the keywords
+		static void InitKeys();
+	private:
+		static std::map<std::string, unsigned int> keys;
 	};
 }
 

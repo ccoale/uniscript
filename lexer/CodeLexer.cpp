@@ -1,10 +1,50 @@
 #include "CodeLexer.h"
+#include "LexerKeyword.h"
 #include <float.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <map>
 
 namespace Uniscript
 {
+	std::map<std::string, unsigned int> CodeLexer::keys;
+
+	// initializes the keywords
+	void CodeLexer::InitKeys()
+	{
+		// declare all of our language keywords
+		keys["alias"] = TOK_ALIAS;
+		keys["break"] = TOK_BREAK;
+		keys["case"] = TOK_CASE;
+		keys["class"] = TOK_CLASS;
+		keys["const"] = TOK_CONST;
+		keys["continue"] = TOK_CONTINUE;
+		keys["default"] = TOK_DEFAULT;
+		keys["delete"] = TOK_DELETE;
+		keys["do"] = TOK_DO;
+		keys["else"] = TOK_ELSE;
+		keys["enum"] = TOK_ENUM;
+		keys["false"] = TOK_FALSE;
+		keys["finally"] = TOK_FINALLY;
+		keys["for"] = TOK_FOR;
+		keys["foreach"] = TOK_FOREACH;
+		keys["in"] = TOK_IN;
+		keys["new"] = TOK_NEW;
+		keys["null"] = TOK_NULL;
+		keys["private"] = TOK_PRIVATE;
+		keys["protected"] = TOK_PROTECTED;
+		keys["public"] = TOK_PUBLIC;
+		keys["ref"] = TOK_REF;
+		keys["return"] = TOK_RETURN;
+		keys["struct"] = TOK_STRUCT;
+		keys["switch"] = TOK_SWITCH;
+		keys["this"] = TOK_THIS;
+		keys["throw"] = TOK_THROW;
+		keys["true"] = TOK_TRUE;
+		keys["typeof"] = TOK_TYPEOF;
+		keys["while"] = TOK_WHILE;
+	}
+
 	// LexFile lexes the given file returning the list of extracted tokens and
 	// a numeric return value (0 if successful). If it failed, the list of
 	// errors (up until a fatal error) is returned as well.
@@ -91,11 +131,8 @@ namespace Uniscript
 		// temporary 64-bit integer
 		__int64 ntmp = 0;
 
-		// temporary 64-bit float
-		double ftmp = 0.0;
-
-		// whether or not the vaue is int or float
-		bool isint = false;
+		// ending string tmp
+		char *tmpEnd = 0;
 
 		// loop through each character in the source
 		for (; i < length; i++)
@@ -121,6 +158,9 @@ namespace Uniscript
 			// skip if we are still in a comment
 			if (bInComment)
 				continue;
+
+			if (la1 == ' ')
+				continue; // skip past whitespace.
 
 			// syntax switch
 			switch(la1)
@@ -305,15 +345,7 @@ namespace Uniscript
 				break;
 
 			case '.':
-				if ( (la2 >= '0' && la2 <= '9'))
-				{
-					stringStart = i;
-					goto _lexFloat;
-				}
-				else
-				{
-					tokens->push_back(LexerToken(line, col, TOK_DOT, szOptFile)); // .
-				}
+				tokens->push_back(LexerToken(line, col, TOK_DOT, szOptFile)); // .
 				break;
 			
 			case ',':
@@ -370,150 +402,58 @@ namespace Uniscript
 				tokens->push_back(tok);
 
 				break;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-				stringStart = i; // this will be the start of our number
-				for (; i < length; i++) {
-					lb1 = (i <= 0) ? 0 : src[i - 1];
-					la1 = (i > length) ? 0 : src[i];
-					la2 = (i > (length - 1)) ? 0 : src[i + 1];
-					if (la1 == '0') {
-						if (la2 == '0') continue; // remove unnecessary leading 0's
-						break;
-					}
-					break;
+
+				// we need to lex numbers HERE
+				// -------------------------
+
+			default:
+				// we need to handle the lexing of an identifier here
+				// we have to check for an identifier
+				stringStart = i;
+				if (! ((src[i] >= 'a' && src[i] <= 'z') || (src[i] >= 'A' && src[i] <= 'Z')))
+				{
+					// identifier must start with a letter
+					errors->push_back(LexerErrorInfo(line, col, LEXERR_INVALIDIDENTNAME, "Invalid identifier name. Must begin with a letter.", szOptFile));
+					return LEXERR_INVALIDIDENTNAME;
 				}
-_lexFloat:
+
+				stringLiteral[i - stringStart] = src[i];
+
 				for (; i < length; i++)
 				{
-					// basic number type checking
-					lb1 = (i <= 0) ? 0 : src[i - 1];
-					la1 = (i > length) ? 0 : src[i];
-					la2 = (i > (length - 1)) ? 0 : src[i + 1];
-					if (la1 == '0') {
-						if (la2 == '0') continue; // remove unnecessary leading 0's
-						if (la2 >= '1' && la2 <= '9') {
-							// error.. expected a 'x' or a '.'
-							errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Expected a 'x' or a '.'.", szOptFile));
-							return LEXERR_UNEXPCHARINNUMLITERAL;
-						} else {
-							stringLiteral[stringStart++] = '0';
-						}
-					} else if (la1 == 'x') {
-						if (lb1 == '0') {
-							// it might be hex.
-							if (!foundX && !foundDot) {
-								// it is hex
-								foundX = true;
-							} else {
-								// error.. unexpected 'x' in number literal.
-								errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected 'x' in number literal.", szOptFile));
-								return LEXERR_UNEXPCHARINNUMLITERAL;
-							}
-						} else {
-							errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected 'x' in number literal.", szOptFile));
-							return LEXERR_UNEXPCHARINNUMLITERAL;
-						}
-					} else if (la1 == '.') {
-						if (!foundDot && !foundX) {
-							// it's a floating-point number
-							foundDot = true;
-							stringLiteral[stringStart++] = '.';
-						} else {
-							// error.. unexpected '.' in number literal.
-							errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected ',' in number literal.", szOptFile));
-							return LEXERR_UNEXPCHARINNUMLITERAL;
-						}
-					} else {
-						// check for basic numbers
-						if (foundX) {
-							// the next number can either be 0-9 or a-f or A-F
-							if ((la1 >= '0' && la1 <= '9') || (la1 >= 'a' && la1 <= 'f') || (la1 >= 'A' && la1 <= 'F')) {
-								// we're good to go.. copy the character to the number string
-								stringLiteral[stringStart++] = la1;
-							} else {
-								// error.. unexpected character in number literal.
-								//errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected character in number literal.", szOptFile));
-								//return LEXERR_UNEXPCHARINNUMLITERAL;
-								break;
-							}
-						} else {
-							// it will be a normal number
-							if ( (la1 >= '0' && la1 <= '9') ) {
-								// we're good to go
-								stringLiteral[stringStart++] =la1;
-							} else {
-								// error.. unexpected character in number literal
-								//errors->push_back(LexerErrorInfo(line, col, LEXERR_UNEXPCHARINNUMLITERAL, "Unexpected character in number literal.", szOptFile));
-								//return LEXERR_UNEXPCHARINNUMLITERAL;
-								break;
-							}
-						}
-					}
+					if (! ((src[i] >= 'a' && src[i] <= 'z') || (src[i] >= 'A' && src[i] <= 'Z') || (src[i] >= '0' && src[i] <= '9')
+						|| (src[i] == '_')) )
+						break;
+
+					stringLiteral[i - stringStart] = src[i];
 				}
 
-				i -= 1;
-				stringLiteral[stringStart] = 0;
-				
-				if (foundDot) {
-					ftmp = strtod(stringLiteral, NULL);
-					isint = false;
-				} else if (foundX) {
-					sscanf(stringLiteral, "%I64X", &ntmp);
-					isint = true;
-				} else {
-					sscanf(stringLiteral, "%I64", &ntmp);
-					isint = true;
-				}
+				stringLiteral[i - stringStart] = 0;
 
-				if (isint)
+				if (keys.find(stringLiteral) != keys.end())
 				{
-					// we need to figure out why kind of int it is
-					if (ntmp <= UCHAR_MAX) {
-						// it's a CHAR
-						tok = LexerToken(line, col, TOK_BYTE, szOptFile);
-						tok.n8 = (unsigned char)ntmp;
-					} else if ((ntmp > UCHAR_MAX) && (ntmp <= USHRT_MAX)) {
-						// it's a SHORT
-						tok = LexerToken(line, col, TOK_SHORT, szOptFile);
-						tok.n16 = (unsigned short)ntmp;
-					} else if ((ntmp > USHRT_MAX) && (ntmp <= ULONG_MAX)) {
-						// it's an INT
-						tok = LexerToken(line, col, TOK_INT, szOptFile);
-						tok.n32 = (unsigned int)ntmp;
-					} else if ((ntmp > ULONG_MAX)) {
-						// it's an INT64
-						tok = LexerToken(line, col, TOK_LONG, szOptFile);
-						tok.n64 = ntmp;
-					}
+					// we have a keyword token
+					tok = LexerToken(line, col, keys[stringLiteral], szOptFile);
+					tok.str = new char[i - stringStart];
+					strcpy(tok.str, stringLiteral);
+					tok.str[i - stringStart] = 0;
+					tokens->push_back(tok);
 				}
 				else
 				{
-					// we need to figure out if it is a float or a double
-					if (ftmp <= FLT_MAX) {
-						// it's a FLOAT
-						tok = LexerToken(line, col, TOK_FLOAT, szOptFile);
-						tok.f32 = (float)ftmp;
-					} else {
-						// it's a DOUBLE
-						tok = LexerToken(line, col, TOK_DOUBLE, szOptFile);
-						tok.f64 = ftmp;
-					}
+					// we have a separate identifier
+					tok = LexerToken(line, col, TOK_IDENT, szOptFile);
+					tok.str = new char[i - stringStart];
+					strcpy(tok.str, stringLiteral);
+					tok.str[i - stringStart] = 0;
+					tokens->push_back(tok);
 				}
 
-				tokens->push_back(tok);
-
-
+				i--; // move back one
 				break;
 			};
+
+			
 		}
 
 		return LEXERR_OK;

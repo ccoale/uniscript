@@ -185,7 +185,51 @@
 				>
 			</File>
 			<File
+				RelativePath=".\lexer\LexerKeyword.h"
+				>
+			</File>
+			<File
 				RelativePath=".\lexer\LexerToken.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="CodeDOM"
+			>
+			<File
+				RelativePath=".\codedom\ClassDeclaration.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\CodeDom.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\Expression.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\ForStatement.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\FunctionDeclaration.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\MemberVariableDeclaration.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\MethodDeclaration.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\VariableDeclaration.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codedom\WhileStatement.h"
 				>
 			</File>
 		</Filter>

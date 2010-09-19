@@ -48,6 +48,9 @@ namespace Uniscript
 
 	// Unexpected character in number literal
 	#define LEXERR_UNEXPCHARINNUMLITERAL	0x04
+
+	// Invalid identifier name
+	#define LEXERR_INVALIDIDENTNAME			0x05
 }
 
 #endif /* ERRORINFO_H */

@@ -286,6 +286,10 @@ namespace Uniscript
 	// 'while' keyword
 	#define TOK_WHILE		TOK_CAT_RESERVED | 0x1C
 
+	// identifier
+	#define TOK_IDENT		TOK_CAT_IDENT | 0x00
+
+
 
 	// This structure stores information about a Token that was
 	// taken from a Uniscript source during lexical analysis.
